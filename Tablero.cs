@@ -16,18 +16,29 @@ using static UnityMainThreadDispatcher;
 public class Tablero : MonoBehaviour 
 {
 
+    public float batteryDrainRate; // Tasa de drenaje de la batería por unidad de tiempo
+    public bool receivedInfo = false;
+    public bool sent = false;
+    public String lastPosd1,lastPosd2;
+
+
     public bool isRunning = true;
 
     public String newPositions;
     public List<String> healthPackages,chargePackages,ammoPackages;
 
+
+    
+            
+
     // class to represent drone info
 
     public class droneInfo
     {
-        public int health;
-        public int charge;
-        public int ammo;
+        public float health;
+        public float charge;
+        public float ammo;
+        public float speed;
         public String position;
 
     }
@@ -38,6 +49,7 @@ public class Tablero : MonoBehaviour
         public List<String> healthPackages;
         public List<String> chargePackages;
         public List<String> ammoPackages;
+       
 
         public Info() {
             drone1 = new droneInfo();
@@ -45,9 +57,11 @@ public class Tablero : MonoBehaviour
             healthPackages = new List<String>();
             chargePackages = new List<String>();
             ammoPackages = new List<String>();
+            
         }
     }
-    Info gameInfo = new Info();    
+    Info gameInfo = new Info();   
+
     Thread senderThread;
     Thread listenerThread;
 
@@ -58,22 +72,30 @@ public class Tablero : MonoBehaviour
         SpawnRandomObjects();
 
         // initial drone1 systems at 100
-        gameInfo.drone1.health = 100;
-        gameInfo.drone1.charge = 100;
-        gameInfo.drone1.ammo = 100;
+        gameInfo.drone1.health = 100f;
+        gameInfo.drone1.charge = 100f;
+        gameInfo.drone1.ammo = 100f;
+        gameInfo.drone1.speed = 20f;
 
         // initial drone2 systems at 100
-        gameInfo.drone2.health = 100;
-        gameInfo.drone2.charge = 100;
-        gameInfo.drone2.ammo = 100;
+        gameInfo.drone2.health = 100f;
+        gameInfo.drone2.charge = 100f;
+        gameInfo.drone2.ammo = 100f;
+        gameInfo.drone2.speed = 20f;
+
 
 
         
         
         senderThread = new Thread( Sender ) { IsBackground = true };
-        listenerThread = new Thread( Listener ) { IsBackground = true };
-
         senderThread.Start();
+
+        while (!sent)
+        {
+
+        }
+
+        listenerThread = new Thread( Listener ) { IsBackground = true };
         listenerThread.Start();
 
 
@@ -90,28 +112,55 @@ public class Tablero : MonoBehaviour
     void Update()
     {
 
-        // healthPositions
+       
+
 
         gameInfo.healthPackages = healthPackages;
         gameInfo.chargePackages = chargePackages;
         gameInfo.ammoPackages = ammoPackages;
-
-
-        // Aqui hay que hacer lo mismo con los ammo packages y charge packages
 
         
         // get drone2 position
         var drone2 = GameObject.Find("drone2");
 
         if (drone2){
-            Debug.Log("Position of drone2: "+drone2.transform.position);
+
+            // Decide battery drain rate 
+            if (gameInfo.drone2.speed == 30f){
+                batteryDrainRate = 1f;
+            }
+
+            if (gameInfo.drone2.speed == 50f){
+                batteryDrainRate = 2f;
+            }
+            
+            if (gameInfo.drone2.speed == 100f){
+                batteryDrainRate = 5f;
+            }
+
+
+             if (drone2.transform.position.ToString() != lastPosd2){
+                gameInfo.drone2.charge -= batteryDrainRate * Time.deltaTime;
+
+                if (gameInfo.drone2.charge <= 0f){
+                    gameInfo.drone2.charge = 0f;
+                    Debug.Log("La batería del dron 2 se ha agotado");
+                }
+
+                lastPosd2 = drone2.transform.position.ToString();
+            }
 
             var mov2 = drone2.GetComponent<DroneMovement>();
 
             // Move
-            string[] positions = newPositions.Split('?');
-            Vector3 drone2Positions = StringToVector3(positions[1]);
-            mov2.moveTo(drone2Positions);   
+            if (newPositions != null && receivedInfo)
+            {
+                string[] positions = newPositions.Split('?');
+                Vector3 drone2Positions = StringToVector3(positions[1]);
+                mov2.moveTo(drone2Positions);   
+
+            } 
+            
             gameInfo.drone2.position = drone2.transform.position.ToString();
 
             
@@ -120,13 +169,43 @@ public class Tablero : MonoBehaviour
         // get drone1 position
         var drone1 = GameObject.Find("drone1");
         if (drone1){
+
+            // Decide battery drain rate 
+            if (gameInfo.drone1.speed == 30f){
+                batteryDrainRate = 1f;
+            }
+
+            if (gameInfo.drone1.speed == 50f){
+                batteryDrainRate = 2f;
+            }
+            
+            if (gameInfo.drone1.speed == 100f){
+                batteryDrainRate = 5f;
+            }
+
+            if (drone1.transform.position.ToString() != lastPosd1){
+                gameInfo.drone1.charge -= batteryDrainRate * Time.deltaTime;
+
+                if (gameInfo.drone1.charge <= 0f){
+                    gameInfo.drone1.charge = 0f;
+                    Debug.Log("La batería del dron 1 se ha agotado");
+                }
+
+                lastPosd1 = drone1.transform.position.ToString();
+
+
+            }
             var mov1 = drone1.GetComponent<DroneMovement>();
 
             // Move
-            string[] positions = newPositions.Split('?');
-            Vector3 drone1Positions = StringToVector3(positions[0]);
-            mov1.moveTo(drone1Positions);    
-            gameInfo.drone1.position = drone1.transform.position.ToString();            
+            if (newPositions != null & receivedInfo){
+                string[] positions = newPositions.Split('?');
+                Vector3 drone1Positions = StringToVector3(positions[0]);
+                mov1.moveTo(drone1Positions);    
+                gameInfo.drone1.position = drone1.transform.position.ToString();       
+
+            }
+                 
      
         }
 
@@ -153,6 +232,9 @@ public class Tablero : MonoBehaviour
 
         try
         {
+            
+
+            // Then, send the drone information periodically
             while (isRunning){
             
                 if (gameInfo.drone1.position != null && gameInfo.drone2.position != null){
@@ -190,6 +272,9 @@ public class Tablero : MonoBehaviour
 
         try
         {
+ 
+
+    
             while (isRunning){
                 Debug.Log("Waiting for broadcast");
                 byte[] bytes = listener.Receive(ref groupEP);
@@ -201,7 +286,7 @@ public class Tablero : MonoBehaviour
 
 
                 newPositions = Encoding.ASCII.GetString(bytes,0,bytes.Length);
-
+                receivedInfo = true;
 
                 Thread.Sleep(2000); // sleep for 2 seconds
 
@@ -226,13 +311,7 @@ public class Tablero : MonoBehaviour
         // Spawn random objects: health, ammo, battery packages
         System.Random random = new System.Random(5);
         int randomPackages = random.Next(1,5);
-        healthPackages = new List<String>();
-        chargePackages = new List<String>();
-        ammoPackages = new List<String>();
-
-
     
-
         // Health packages 
         for (int i = 0; i < randomPackages; i++)
         {
@@ -262,30 +341,10 @@ public class Tablero : MonoBehaviour
             
         } 
 
-        // Spawn random obstacles: trees and rocks
-        int randomObstacles = random.Next(1,5);
+       
+            
+            
         
-    
-
-        // Health packages 
-        for (int i = 0; i < randomObstacles; i++)
-        {
-            // Instantiate random tree
-            Vector3 randomTreePosition = new Vector3(UnityEngine.Random.Range(-300,300), -7, UnityEngine.Random.Range(-300,300));
-            var tree = GameObject.Find("Tree");
-            if (tree){
-                Instantiate(tree,randomTreePosition,Quaternion.identity);
-            }
-
-            // Instantiate random rock
-            Vector3 randomRockPosition = new Vector3(UnityEngine.Random.Range(-300,300), 0, UnityEngine.Random.Range(-300,300));
-            var rock = GameObject.Find("Rock");
-            if (rock){
-                Instantiate(rock,randomRockPosition,Quaternion.identity);
-            }
-            
-            
-        } 
     }
 }
 
