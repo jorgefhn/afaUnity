@@ -90,10 +90,7 @@ public class Tablero : MonoBehaviour
         senderThread = new Thread( Sender ) { IsBackground = true };
         senderThread.Start();
 
-        while (!sent)
-        {
-
-        }
+      
 
         listenerThread = new Thread( Listener ) { IsBackground = true };
         listenerThread.Start();
