@@ -22,6 +22,7 @@ public class Tablero : MonoBehaviour
     public String lastPosd1,lastPosd2;
 
 
+
     public bool isRunning = true;
 
     public String newPositions;
@@ -72,15 +73,15 @@ public class Tablero : MonoBehaviour
         SpawnRandomObjects();
 
         // initial drone1 systems at 100
-        gameInfo.drone1.health = 100f;
-        gameInfo.drone1.charge = 100f;
-        gameInfo.drone1.ammo = 100f;
+        gameInfo.drone1.health = 80f;
+        gameInfo.drone1.charge = 80f;
+        gameInfo.drone1.ammo = 80f;
         gameInfo.drone1.speed = 20f;
 
         // initial drone2 systems at 100
-        gameInfo.drone2.health = 100f;
-        gameInfo.drone2.charge = 100f;
-        gameInfo.drone2.ammo = 100f;
+        gameInfo.drone2.health = 80f;
+        gameInfo.drone2.charge = 80f;
+        gameInfo.drone2.ammo = 80f;
         gameInfo.drone2.speed = 20f;
 
 
@@ -104,6 +105,39 @@ public class Tablero : MonoBehaviour
         str = str.Replace("[", "").Replace("]", "");
         string[] components = str.Split(',');
         return new Vector3(float.Parse(components[0]), float.Parse(components[1]), float.Parse(components[2]));
+    }
+
+    public void refillAmmo(String droneName)
+    {
+        if (droneName == "drone1"){
+            gameInfo.drone1.ammo = 100f;
+        }
+        if (droneName == "drone2"){
+            gameInfo.drone2.ammo = 100f;
+        }
+
+    }
+
+    public void refillCharge(String droneName)
+    {
+        if (droneName == "drone1"){
+            gameInfo.drone1.charge = 100f;
+        }
+        if (droneName == "drone2"){
+            gameInfo.drone2.charge = 100f;
+        }
+
+    }
+
+    public void refillHealth(String droneName)
+    {
+        if (droneName == "drone1"){
+            gameInfo.drone1.health = 100f;
+        }
+        if (droneName == "drone2"){
+            gameInfo.drone2.health = 100f;
+        }
+
     }
 
     void Update()
@@ -134,6 +168,8 @@ public class Tablero : MonoBehaviour
             if (gameInfo.drone2.speed == 100f){
                 batteryDrainRate = 5f;
             }
+
+            
 
 
              if (drone2.transform.position.ToString() != lastPosd2){
