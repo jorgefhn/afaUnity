@@ -39,7 +39,6 @@ public class Tablero : MonoBehaviour
         public float health;
         public float charge;
         public float ammo;
-        public float speed;
         public String position;
 
     }
@@ -73,16 +72,14 @@ public class Tablero : MonoBehaviour
         SpawnRandomObjects();
 
         // initial drone1 systems at 100
-        gameInfo.drone1.health = 80f;
-        gameInfo.drone1.charge = 80f;
-        gameInfo.drone1.ammo = 80f;
-        gameInfo.drone1.speed = 20f;
+        gameInfo.drone1.health = 0f;
+        gameInfo.drone1.charge = 0f;
+        gameInfo.drone1.ammo = 0f;
 
         // initial drone2 systems at 100
-        gameInfo.drone2.health = 80f;
-        gameInfo.drone2.charge = 80f;
-        gameInfo.drone2.ammo = 80f;
-        gameInfo.drone2.speed = 20f;
+        gameInfo.drone2.health = 0f;
+        gameInfo.drone2.charge = 0f;
+        gameInfo.drone2.ammo = 0f;
 
 
 
@@ -144,6 +141,7 @@ public class Tablero : MonoBehaviour
     {
 
        
+        batteryDrainRate = 1f;
 
 
         gameInfo.healthPackages = healthPackages;
@@ -156,20 +154,6 @@ public class Tablero : MonoBehaviour
 
         if (drone2){
 
-            // Decide battery drain rate 
-            if (gameInfo.drone2.speed == 30f){
-                batteryDrainRate = 1f;
-            }
-
-            if (gameInfo.drone2.speed == 50f){
-                batteryDrainRate = 2f;
-            }
-            
-            if (gameInfo.drone2.speed == 100f){
-                batteryDrainRate = 5f;
-            }
-
-            
 
 
              if (drone2.transform.position.ToString() != lastPosd2){
@@ -198,23 +182,13 @@ public class Tablero : MonoBehaviour
 
             
         }
+        
 
         // get drone1 position
         var drone1 = GameObject.Find("drone1");
+        
         if (drone1){
 
-            // Decide battery drain rate 
-            if (gameInfo.drone1.speed == 30f){
-                batteryDrainRate = 1f;
-            }
-
-            if (gameInfo.drone1.speed == 50f){
-                batteryDrainRate = 2f;
-            }
-            
-            if (gameInfo.drone1.speed == 100f){
-                batteryDrainRate = 5f;
-            }
 
             if (drone1.transform.position.ToString() != lastPosd1){
                 gameInfo.drone1.charge -= batteryDrainRate * Time.deltaTime;
