@@ -72,14 +72,14 @@ public class Tablero : MonoBehaviour
         SpawnRandomObjects();
 
         // initial drone1 systems at 100
-        gameInfo.drone1.health = 0f;
-        gameInfo.drone1.charge = 0f;
-        gameInfo.drone1.ammo = 0f;
+        gameInfo.drone1.health = 100f;
+        gameInfo.drone1.charge = 100f;
+        gameInfo.drone1.ammo = 100f;
 
         // initial drone2 systems at 100
-        gameInfo.drone2.health = 0f;
-        gameInfo.drone2.charge = 0f;
-        gameInfo.drone2.ammo = 0f;
+        gameInfo.drone2.health = 100f;
+        gameInfo.drone2.charge = 100f;
+        gameInfo.drone2.ammo = 100f;
 
 
 
@@ -101,7 +101,8 @@ public class Tablero : MonoBehaviour
     {
         str = str.Replace("[", "").Replace("]", "");
         string[] components = str.Split(',');
-        return new Vector3(float.Parse(components[0]), float.Parse(components[1]), float.Parse(components[2]));
+        CultureInfo culture = new CultureInfo("en-US"); // Especifica el uso del punto como separador decimal
+        return new Vector3(float.Parse(components[0],culture), float.Parse(components[1],culture), float.Parse(components[2],culture));
     }
 
     public void refillAmmo(String droneName)
@@ -174,7 +175,11 @@ public class Tablero : MonoBehaviour
             {
                 string[] positions = newPositions.Split('?');
                 Vector3 drone2Positions = StringToVector3(positions[1]);
+                if (gameInfo.drone2.health > 0 && gameInfo.drone2.charge > 0)
+                {
+                Debug.Log("Drone 2 va a: "+drone2Positions);
                 mov2.moveTo(drone2Positions);   
+                }
 
             } 
             
@@ -208,11 +213,15 @@ public class Tablero : MonoBehaviour
             if (newPositions != null & receivedInfo){
                 string[] positions = newPositions.Split('?');
                 Vector3 drone1Positions = StringToVector3(positions[0]);
-                mov1.moveTo(drone1Positions);    
-                gameInfo.drone1.position = drone1.transform.position.ToString();       
+                if (gameInfo.drone2.health > 0 && gameInfo.drone2.charge > 0)
+                {
+                    mov1.moveTo(drone1Positions);    
+                }
+
 
             }
-                 
+            gameInfo.drone1.position = drone1.transform.position.ToString();       
+
      
         }
 
@@ -246,12 +255,10 @@ public class Tablero : MonoBehaviour
             
                 if (gameInfo.drone1.position != null && gameInfo.drone2.position != null){
                     string json = JsonConvert.SerializeObject(gameInfo);
-                    Debug.Log("Vamos a enviar: "+json);
                     byte[] data = Encoding.ASCII.GetBytes(json);        
                     IPEndPoint ep = new IPEndPoint(broadcast,11004);
                     s.SendTo(data,ep);
-                    Debug.Log("Message sent to the broadcast address");
-                    Thread.Sleep(2000); // sleep for 2 seconds
+                    Thread.Sleep(1000); // sleep for 2 seconds
 
 
                 }
@@ -283,19 +290,16 @@ public class Tablero : MonoBehaviour
 
     
             while (isRunning){
-                Debug.Log("Waiting for broadcast");
                 byte[] bytes = listener.Receive(ref groupEP);
 
-                Debug.Log($"Received broadcast from {groupEP} :");
-
                 // Aquí recibe la información de a dónde tienen que ir los drones
-                Debug.Log($"{Encoding.ASCII.GetString(bytes,0,bytes.Length)}");
+                Debug.Log($"Mensaje recibido desde Java{Encoding.ASCII.GetString(bytes,0,bytes.Length)}");
 
 
                 newPositions = Encoding.ASCII.GetString(bytes,0,bytes.Length);
                 receivedInfo = true;
 
-                Thread.Sleep(2000); // sleep for 2 seconds
+                Thread.Sleep(1000); // sleep for 1 seconds
 
 
                 
