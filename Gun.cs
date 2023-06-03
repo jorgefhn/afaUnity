@@ -10,8 +10,7 @@ public class Gun : MonoBehaviour
     public Transform bulletSpawnPoint;
     public GameObject target; 
 
-    public float gunRange = 600;
-    public float fireRate = 0.2f;
+    public float gunRange = 200;
     public float laserDuration = 1f;
 
     LineRenderer  laserLine;
@@ -40,12 +39,17 @@ public class Gun : MonoBehaviour
             laserLine.SetPosition(0,bulletSpawnPoint.position);
             RaycastHit hit;
 
-            Debug.Log(Physics.Raycast(bulletSpawnPoint.transform.position,bulletSpawnPoint.transform.forward,out hit,gunRange));
             if (Physics.Raycast(bulletSpawnPoint.transform.position,target.transform.position,out hit,gunRange))
             {
                 laserLine.SetPosition(1,hit.point);
-                Debug.Log("He dado a : "+hit.transform.gameObject.name);
-                Destroy(hit.transform.gameObject);
+                if (hit.transform.gameObject.name == "drone1" || hit.transform.gameObject.name == "drone2")
+                {
+                    Debug.Log(transform.gameObject.name + " hit "+hit.transform.gameObject.name);
+                    /*int health = hit.transform.gameObject.GetComponent("health");
+                    health -= 20;
+                    hit.transform.gameObject.GetComponent("health") = health;
+                    */
+                }
             }
 
             else
